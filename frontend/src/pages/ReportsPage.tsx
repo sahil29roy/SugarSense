@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Download,
   Plus,
@@ -14,6 +14,18 @@ interface ReportsPageProps {
 }
 
 export const ReportsPage: React.FC<ReportsPageProps> = ({ onNavigate }) => {
+  const generatedDate = useMemo(
+    () =>
+      new Date().toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    []
+  );
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentRecords, setRecentRecords] = useState<ScreeningRecord[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -108,14 +120,6 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ onNavigate }) => {
       </div>
     );
   }
-
-  const generatedDate = new Date().toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: 1040, margin: '0 auto' }}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -25,6 +25,17 @@ interface DashboardPageProps {
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
+  const currentDate = useMemo(
+    () =>
+      new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+    []
+  );
+
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentRecords, setRecentRecords] = useState<ScreeningRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,13 +90,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   if (error) {
     return <ErrorState message={error} onRetry={loadDashboardData} />;
   }
-
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
