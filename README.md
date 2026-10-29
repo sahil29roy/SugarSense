@@ -1,6 +1,6 @@
-# DiaPredict
+# SugarSense
 
-DiaPredict is an educational symptom-based risk-screening web application.
+SugarSense is an educational symptom-based risk-screening web application.
 
 The application allows users to enter age, gender, and 14 symptom responses to receive an educational positive/negative diabetes risk screening assessment powered by a machine learning model trained on empirical clinical questionnaire data.
 
@@ -15,7 +15,7 @@ The application allows users to enter age, gender, and 14 symptom responses to r
 ## Project Structure
 
 ```text
-diapredict/
+sugarsense/
 ├── frontend/
 │   ├── public/
 │   ├── src/
@@ -94,7 +94,7 @@ The frontend development server will be available at [http://localhost:5173](htt
 
 ### 4. Database Setup (MongoDB)
 
-DiaPredict uses local MongoDB Community Server.
+SugarSense uses local MongoDB Community Server.
 - To check service status on Windows:
   ```powershell
   Get-Service -Name MongoDB

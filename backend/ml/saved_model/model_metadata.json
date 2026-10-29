@@ -1,0 +1,190 @@
+{
+  "model_name": "Decision Tree",
+  "model_file": "sugarsense_model.joblib",
+  "trained_at_utc": "2026-10-29T14:28:50.076687+00:00",
+  "random_seed": 42,
+  "dataset_summary": {
+    "total_rows": 520,
+    "train_rows": 416,
+    "test_rows": 104,
+    "train_test_split_ratio": "80/20"
+  },
+  "features": {
+    "order": [
+      "Age",
+      "Gender",
+      "Polyuria",
+      "Polydipsia",
+      "sudden weight loss",
+      "weakness",
+      "Polyphagia",
+      "Genital thrush",
+      "visual blurring",
+      "Itching",
+      "Irritability",
+      "delayed healing",
+      "partial paresis",
+      "muscle stiffness",
+      "Alopecia",
+      "Obesity"
+    ],
+    "count": 16
+  },
+  "target": {
+    "column": "class",
+    "classes": [
+      "Negative",
+      "Positive"
+    ]
+  },
+  "selected_model_metrics": {
+    "model_name": "Decision Tree",
+    "cross_validation": {
+      "folds": 5,
+      "mean_accuracy": 0.9639,
+      "mean_recall": 0.9686,
+      "mean_precision": 0.973,
+      "mean_f1": 0.9704
+    },
+    "test_metrics": {
+      "accuracy": 0.9904,
+      "recall_positive": 0.9844,
+      "precision_positive": 1.0,
+      "f1_positive": 0.9921,
+      "confusion_matrix": {
+        "true_negative": 40,
+        "false_positive": 0,
+        "false_negative": 1,
+        "true_positive": 63
+      },
+      "classification_report": {
+        "Negative": {
+          "precision": 0.975609756097561,
+          "recall": 1.0,
+          "f1-score": 0.9876543209876543,
+          "support": 40.0
+        },
+        "Positive": {
+          "precision": 1.0,
+          "recall": 0.984375,
+          "f1-score": 0.9921259842519685,
+          "support": 64.0
+        },
+        "accuracy": 0.9903846153846154,
+        "macro avg": {
+          "precision": 0.9878048780487805,
+          "recall": 0.9921875,
+          "f1-score": 0.9898901526198114,
+          "support": 104.0
+        },
+        "weighted avg": {
+          "precision": 0.9906191369606004,
+          "recall": 0.9903846153846154,
+          "f1-score": 0.9904061137656939,
+          "support": 104.0
+        }
+      }
+    }
+  },
+  "all_model_evaluations": [
+    {
+      "model_name": "Logistic Regression",
+      "cross_validation": {
+        "folds": 5,
+        "mean_accuracy": 0.9326,
+        "mean_recall": 0.9412,
+        "mean_precision": 0.9492,
+        "mean_f1": 0.9448
+      },
+      "test_metrics": {
+        "accuracy": 0.9423,
+        "recall_positive": 0.9219,
+        "precision_positive": 0.9833,
+        "f1_positive": 0.9516,
+        "confusion_matrix": {
+          "true_negative": 39,
+          "false_positive": 1,
+          "false_negative": 5,
+          "true_positive": 59
+        },
+        "classification_report": {
+          "Negative": {
+            "precision": 0.8863636363636364,
+            "recall": 0.975,
+            "f1-score": 0.9285714285714286,
+            "support": 40.0
+          },
+          "Positive": {
+            "precision": 0.9833333333333333,
+            "recall": 0.921875,
+            "f1-score": 0.9516129032258065,
+            "support": 64.0
+          },
+          "accuracy": 0.9423076923076923,
+          "macro avg": {
+            "precision": 0.9348484848484848,
+            "recall": 0.9484375,
+            "f1-score": 0.9400921658986175,
+            "support": 104.0
+          },
+          "weighted avg": {
+            "precision": 0.9460372960372959,
+            "recall": 0.9423076923076923,
+            "f1-score": 0.9427507975895073,
+            "support": 104.0
+          }
+        }
+      }
+    },
+    {
+      "model_name": "Decision Tree",
+      "cross_validation": {
+        "folds": 5,
+        "mean_accuracy": 0.9639,
+        "mean_recall": 0.9686,
+        "mean_precision": 0.973,
+        "mean_f1": 0.9704
+      },
+      "test_metrics": {
+        "accuracy": 0.9904,
+        "recall_positive": 0.9844,
+        "precision_positive": 1.0,
+        "f1_positive": 0.9921,
+        "confusion_matrix": {
+          "true_negative": 40,
+          "false_positive": 0,
+          "false_negative": 1,
+          "true_positive": 63
+        },
+        "classification_report": {
+          "Negative": {
+            "precision": 0.975609756097561,
+            "recall": 1.0,
+            "f1-score": 0.9876543209876543,
+            "support": 40.0
+          },
+          "Positive": {
+            "precision": 1.0,
+            "recall": 0.984375,
+            "f1-score": 0.9921259842519685,
+            "support": 64.0
+          },
+          "accuracy": 0.9903846153846154,
+          "macro avg": {
+            "precision": 0.9878048780487805,
+            "recall": 0.9921875,
+            "f1-score": 0.9898901526198114,
+            "support": 104.0
+          },
+          "weighted avg": {
+            "precision": 0.9906191369606004,
+            "recall": 0.9903846153846154,
+            "f1-score": 0.9904061137656939,
+            "support": 104.0
+          }
+        }
+      }
+    }
+  ],
+  "clinical_tradeoff_note": "In health screening applications, false negatives (failing to identify at-risk users) carry greater clinical cost than false positives (which merely trigger confirmatory clinical evaluation). The final model was selected primarily for high positive-class sensitivity and overall discrimination."
+}
