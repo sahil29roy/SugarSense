@@ -4,22 +4,32 @@ from typing import Any, Dict
 from fastapi import Depends, FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.db.mongodb import close_mongodb_connection, connect_to_mongodb, ping_mongodb
 from app.routes.prediction import router as prediction_router
+from app.routes.screenings import router as screenings_router
 from app.schemas.prediction import HealthResponse
 from app.services.prediction_service import PredictionService, get_prediction_service
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan context: initialize model pipeline once on startup."""
+    """Application lifespan context: initialize model pipeline and database on startup, close on shutdown."""
+    # 1. Initialize ML model pipeline
     service = get_prediction_service()
     service.load_model()
+
+    # 2. Establish and verify MongoDB connection
+    connect_to_mongodb()
+
     yield
+
+    # 3. Clean up database connection
+    close_mongodb_connection()
 
 
 app = FastAPI(
     title="SugarSense API",
-    description="Educational symptom-based diabetes risk-screening API powered by FastAPI and scikit-learn.",
+    description="Educational symptom-based diabetes risk-screening API powered by FastAPI, scikit-learn, and MongoDB.",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -42,6 +52,7 @@ app.add_middleware(
 
 # Register route modules
 app.include_router(prediction_router)
+app.include_router(screenings_router)
 
 
 @app.get(
@@ -65,19 +76,22 @@ def read_root() -> Dict[str, Any]:
     tags=["Health"],
     response_model=HealthResponse,
     summary="Application Health Status",
-    description="Verify server process health and confirmation of loaded ML model artifact.",
+    description="Verify server process health, loaded ML model artifact, and MongoDB connection status.",
 )
 def health_check(
     response: Response,
     service: PredictionService = Depends(get_prediction_service),
 ) -> HealthResponse:
-    """Check application health and ML model availability."""
+    """Check application health, ML model availability, and database connectivity."""
+    db_connected = ping_mongodb()
+
     if service.is_loaded:
         return HealthResponse(
             status="healthy",
             service="sugarsense-backend",
             model_loaded=True,
             model_name=service.metadata.get("model_name"),
+            database_connected=db_connected,
         )
 
     # Return degraded status and 503 if required model artifact is unavailable
@@ -87,4 +101,5 @@ def health_check(
         service="sugarsense-backend",
         model_loaded=False,
         model_name=None,
+        database_connected=db_connected,
     )
