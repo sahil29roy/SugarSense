@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
-    title="DiaPredict API",
+    title="SugarSense API",
     description="Educational symptom-based diabetes risk-screening API",
     version="0.1.0",
 )
@@ -23,10 +23,10 @@ app.add_middleware(
 def read_root():
     """Return basic application information and operational status."""
     return {
-        "app": "DiaPredict API",
+        "app": "SugarSense API",
         "status": "online",
         "version": "0.1.0",
-        "message": "Welcome to DiaPredict API. Educational diabetes risk-screening service.",
+        "message": "Welcome to SugarSense API. Educational diabetes risk-screening service.",
     }
 
 
@@ -35,5 +35,5 @@ def health_check():
     """Basic health check endpoint that does not depend on database or ML models."""
     return {
         "status": "healthy",
-        "service": "diapredict-backend",
+        "service": "sugarsense-backend",
     }

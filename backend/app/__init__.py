@@ -1,1 +1,1 @@
-"""DiaPredict backend application package."""
+"""SugarSense backend application package."""
