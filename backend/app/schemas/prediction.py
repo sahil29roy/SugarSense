@@ -166,6 +166,11 @@ class PredictionResponse(BaseModel):
         default=EDUCATIONAL_DISCLAIMER,
         description="Educational disclaimer confirming this is a statistical estimate rather than a medical diagnosis.",
     )
+    screening_id: Optional[str] = Field(
+        default=None,
+        description="Unique MongoDB document ObjectId if persisted to screening history.",
+        examples=["67213bfa7f21e51b145d8123"],
+    )
 
 
 class ModelInfoResponse(BaseModel):
@@ -184,3 +189,4 @@ class HealthResponse(BaseModel):
     service: str = Field(default="sugarsense-backend")
     model_loaded: bool
     model_name: Optional[str] = None
+    database_connected: bool = Field(default=False, description="Whether MongoDB is reachable.")

@@ -1,9 +1,12 @@
 from typing import Any, Dict
+from unittest.mock import MagicMock
+from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 import pytest
 
 from app.main import app
 from app.services.prediction_service import PredictionService, get_prediction_service
+from app.services.screening_service import ScreeningService, get_screening_service
 
 
 @pytest.fixture
@@ -115,25 +118,53 @@ def test_get_model_info_service_unavailable(client: TestClient):
 
 
 def test_predict_success_with_valid_input(client: TestClient, valid_questionnaire_payload: Dict[str, Any]):
-    """Verify POST /api/v1/predict with valid payload returns proper prediction response schema."""
-    response = client.post("/api/v1/predict", json=valid_questionnaire_payload)
-    assert response.status_code == 200
-    data = response.json()
+    """Verify POST /api/v1/predict with valid payload returns proper prediction response schema and persists screening."""
+    mock_screening = MagicMock(spec=ScreeningService)
+    mock_screening.save_screening.return_value = "507f1f77bcf86cd799439011"
+    app.dependency_overrides[get_screening_service] = lambda: mock_screening
 
-    assert data["prediction"] in ["Positive", "Negative"]
-    assert data["risk_assessment"] in ["Elevated Risk Detected", "Low Risk Detected"]
-    assert isinstance(data["model_score"], float)
-    assert 0.0 <= data["model_score"] <= 1.0
+    try:
+        response = client.post("/api/v1/predict", json=valid_questionnaire_payload)
+        assert response.status_code == 200
+        data = response.json()
 
-    # Verify probability distribution
-    probs = data["class_probabilities"]
-    assert "Positive" in probs
-    assert "Negative" in probs
-    assert pytest.approx(probs["Positive"] + probs["Negative"], 0.01) == 1.0
+        assert data["prediction"] in ["Positive", "Negative"]
+        assert data["risk_assessment"] in ["Elevated Risk Detected", "Low Risk Detected"]
+        assert isinstance(data["model_score"], float)
+        assert 0.0 <= data["model_score"] <= 1.0
 
-    # Verify educational disclaimer
-    assert "disclaimer" in data
-    assert "medical diagnosis" in data["disclaimer"]
+        # Verify probability distribution
+        probs = data["class_probabilities"]
+        assert "Positive" in probs
+        assert "Negative" in probs
+        assert pytest.approx(probs["Positive"] + probs["Negative"], 0.01) == 1.0
+
+        # Verify screening id persistence result
+        assert data["screening_id"] == "507f1f77bcf86cd799439011"
+        mock_screening.save_screening.assert_called_once()
+
+        # Verify educational disclaimer
+        assert "disclaimer" in data
+        assert "medical diagnosis" in data["disclaimer"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_predict_database_persistence_failure_returns_503(client: TestClient, valid_questionnaire_payload: Dict[str, Any]):
+    """Verify POST /api/v1/predict returns 503 when database fails to persist screening record."""
+    mock_screening = MagicMock(spec=ScreeningService)
+    mock_screening.save_screening.side_effect = HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Screening persistence failed. Database is currently unavailable."
+    )
+    app.dependency_overrides[get_screening_service] = lambda: mock_screening
+
+    try:
+        response = client.post("/api/v1/predict", json=valid_questionnaire_payload)
+        assert response.status_code == 503
+        assert "unavailable" in response.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_predict_rejects_invalid_age(client: TestClient, valid_questionnaire_payload: Dict[str, Any]):
