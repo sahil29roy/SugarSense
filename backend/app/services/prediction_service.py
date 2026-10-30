@@ -104,11 +104,18 @@ class PredictionService:
             if hasattr(self.pipeline, "predict_proba"):
                 probs = self.pipeline.predict_proba(df)[0]
                 classes = self.pipeline.classes_
+                if len(classes) != len(probs):
+                    raise ValueError("Model classes and probability outputs do not align.")
                 for cls_name, prob_val in zip(classes, probs):
-                    class_probabilities[str(cls_name)] = round(float(prob_val), 4)
+                    value = float(prob_val)
+                    if not pd.notna(value) or value < 0.0 or value > 1.0:
+                        raise ValueError("Model returned an invalid class probability.")
+                    class_probabilities[str(cls_name)] = round(value, 6)
 
                 # Score representing positive risk probability
-                model_score = class_probabilities.get("Positive", 0.0)
+                if "Positive" not in class_probabilities:
+                    raise ValueError("Model does not expose the Positive target class.")
+                model_score = class_probabilities["Positive"]
             else:
                 # Fallback score if probabilities are unsupported
                 model_score = 1.0 if prediction_str == "Positive" else 0.0

@@ -1,13 +1,16 @@
 {
   "model_name": "Decision Tree",
   "model_file": "sugarsense_model.joblib",
-  "trained_at_utc": "2026-10-29T14:28:50.076687+00:00",
+  "trained_at_utc": "2026-10-30T14:36:43.148603+00:00",
   "random_seed": 42,
   "dataset_summary": {
     "total_rows": 520,
     "train_rows": 416,
     "test_rows": 104,
-    "train_test_split_ratio": "80/20"
+    "train_test_split_ratio": "80/20",
+    "duplicate_rows": 269,
+    "duplicate_feature_profiles": 269,
+    "split_strategy": "StratifiedGroupKFold; identical feature profiles kept together"
   },
   "features": {
     "order": [
@@ -41,49 +44,57 @@
     "model_name": "Decision Tree",
     "cross_validation": {
       "folds": 5,
-      "mean_accuracy": 0.9639,
-      "mean_recall": 0.9686,
-      "mean_precision": 0.973,
-      "mean_f1": 0.9704
+      "mean_accuracy": 0.8271,
+      "mean_recall": 0.8554,
+      "mean_precision": 0.8675,
+      "mean_f1": 0.8566,
+      "mean_roc_auc": 0.8826
     },
     "test_metrics": {
-      "accuracy": 0.9904,
-      "recall_positive": 0.9844,
-      "precision_positive": 1.0,
-      "f1_positive": 0.9921,
+      "accuracy": 0.7788,
+      "recall_positive": 0.7188,
+      "precision_positive": 0.902,
+      "f1_positive": 0.8,
+      "roc_auc": 0.8246,
+      "brier_positive": 0.1667,
       "confusion_matrix": {
-        "true_negative": 40,
-        "false_positive": 0,
-        "false_negative": 1,
-        "true_positive": 63
+        "true_negative": 35,
+        "false_positive": 5,
+        "false_negative": 18,
+        "true_positive": 46
       },
       "classification_report": {
         "Negative": {
-          "precision": 0.975609756097561,
-          "recall": 1.0,
-          "f1-score": 0.9876543209876543,
+          "precision": 0.660377358490566,
+          "recall": 0.875,
+          "f1-score": 0.7526881720430108,
           "support": 40.0
         },
         "Positive": {
-          "precision": 1.0,
-          "recall": 0.984375,
-          "f1-score": 0.9921259842519685,
+          "precision": 0.9019607843137255,
+          "recall": 0.71875,
+          "f1-score": 0.8,
           "support": 64.0
         },
-        "accuracy": 0.9903846153846154,
+        "accuracy": 0.7788461538461539,
         "macro avg": {
-          "precision": 0.9878048780487805,
-          "recall": 0.9921875,
-          "f1-score": 0.9898901526198114,
+          "precision": 0.7811690714021458,
+          "recall": 0.796875,
+          "f1-score": 0.7763440860215054,
           "support": 104.0
         },
         "weighted avg": {
-          "precision": 0.9906191369606004,
-          "recall": 0.9903846153846154,
-          "f1-score": 0.9904061137656939,
+          "precision": 0.8090440820740488,
+          "recall": 0.7788461538461539,
+          "f1-score": 0.7818031430934658,
           "support": 104.0
         }
       }
+    },
+    "best_params": {
+      "classifier__max_depth": 2,
+      "classifier__min_samples_leaf": 1,
+      "classifier__min_samples_split": 2
     }
   },
   "all_model_evaluations": [
@@ -91,100 +102,115 @@
       "model_name": "Logistic Regression",
       "cross_validation": {
         "folds": 5,
-        "mean_accuracy": 0.9326,
-        "mean_recall": 0.9412,
-        "mean_precision": 0.9492,
-        "mean_f1": 0.9448
+        "mean_accuracy": 0.7935,
+        "mean_recall": 0.9535,
+        "mean_precision": 0.7684,
+        "mean_f1": 0.8504,
+        "mean_roc_auc": 0.9483
       },
       "test_metrics": {
-        "accuracy": 0.9423,
+        "accuracy": 0.9038,
         "recall_positive": 0.9219,
-        "precision_positive": 0.9833,
-        "f1_positive": 0.9516,
+        "precision_positive": 0.9219,
+        "f1_positive": 0.9219,
+        "roc_auc": 0.9117,
+        "brier_positive": 0.1567,
         "confusion_matrix": {
-          "true_negative": 39,
-          "false_positive": 1,
+          "true_negative": 35,
+          "false_positive": 5,
           "false_negative": 5,
           "true_positive": 59
         },
         "classification_report": {
           "Negative": {
-            "precision": 0.8863636363636364,
-            "recall": 0.975,
-            "f1-score": 0.9285714285714286,
+            "precision": 0.875,
+            "recall": 0.875,
+            "f1-score": 0.875,
             "support": 40.0
           },
           "Positive": {
-            "precision": 0.9833333333333333,
+            "precision": 0.921875,
             "recall": 0.921875,
-            "f1-score": 0.9516129032258065,
+            "f1-score": 0.921875,
             "support": 64.0
           },
-          "accuracy": 0.9423076923076923,
+          "accuracy": 0.9038461538461539,
           "macro avg": {
-            "precision": 0.9348484848484848,
-            "recall": 0.9484375,
-            "f1-score": 0.9400921658986175,
+            "precision": 0.8984375,
+            "recall": 0.8984375,
+            "f1-score": 0.8984375,
             "support": 104.0
           },
           "weighted avg": {
-            "precision": 0.9460372960372959,
-            "recall": 0.9423076923076923,
-            "f1-score": 0.9427507975895073,
+            "precision": 0.9038461538461539,
+            "recall": 0.9038461538461539,
+            "f1-score": 0.9038461538461539,
             "support": 104.0
           }
         }
+      },
+      "best_params": {
+        "classifier__C": 0.01,
+        "classifier__class_weight": null
       }
     },
     {
       "model_name": "Decision Tree",
       "cross_validation": {
         "folds": 5,
-        "mean_accuracy": 0.9639,
-        "mean_recall": 0.9686,
-        "mean_precision": 0.973,
-        "mean_f1": 0.9704
+        "mean_accuracy": 0.8271,
+        "mean_recall": 0.8554,
+        "mean_precision": 0.8675,
+        "mean_f1": 0.8566,
+        "mean_roc_auc": 0.8826
       },
       "test_metrics": {
-        "accuracy": 0.9904,
-        "recall_positive": 0.9844,
-        "precision_positive": 1.0,
-        "f1_positive": 0.9921,
+        "accuracy": 0.7788,
+        "recall_positive": 0.7188,
+        "precision_positive": 0.902,
+        "f1_positive": 0.8,
+        "roc_auc": 0.8246,
+        "brier_positive": 0.1667,
         "confusion_matrix": {
-          "true_negative": 40,
-          "false_positive": 0,
-          "false_negative": 1,
-          "true_positive": 63
+          "true_negative": 35,
+          "false_positive": 5,
+          "false_negative": 18,
+          "true_positive": 46
         },
         "classification_report": {
           "Negative": {
-            "precision": 0.975609756097561,
-            "recall": 1.0,
-            "f1-score": 0.9876543209876543,
+            "precision": 0.660377358490566,
+            "recall": 0.875,
+            "f1-score": 0.7526881720430108,
             "support": 40.0
           },
           "Positive": {
-            "precision": 1.0,
-            "recall": 0.984375,
-            "f1-score": 0.9921259842519685,
+            "precision": 0.9019607843137255,
+            "recall": 0.71875,
+            "f1-score": 0.8,
             "support": 64.0
           },
-          "accuracy": 0.9903846153846154,
+          "accuracy": 0.7788461538461539,
           "macro avg": {
-            "precision": 0.9878048780487805,
-            "recall": 0.9921875,
-            "f1-score": 0.9898901526198114,
+            "precision": 0.7811690714021458,
+            "recall": 0.796875,
+            "f1-score": 0.7763440860215054,
             "support": 104.0
           },
           "weighted avg": {
-            "precision": 0.9906191369606004,
-            "recall": 0.9903846153846154,
-            "f1-score": 0.9904061137656939,
+            "precision": 0.8090440820740488,
+            "recall": 0.7788461538461539,
+            "f1-score": 0.7818031430934658,
             "support": 104.0
           }
         }
+      },
+      "best_params": {
+        "classifier__max_depth": 2,
+        "classifier__min_samples_leaf": 1,
+        "classifier__min_samples_split": 2
       }
     }
   ],
-  "clinical_tradeoff_note": "In health screening applications, false negatives (failing to identify at-risk users) carry greater clinical cost than false positives (which merely trigger confirmatory clinical evaluation). The final model was selected primarily for high positive-class sensitivity and overall discrimination."
+  "clinical_tradeoff_note": "Educational screening context only. The model was selected by grouped training cross-validation F1, with positive recall and accuracy as tie breakers; held-out test results did not inform selection. These dataset metrics do not establish clinical reliability."
 }

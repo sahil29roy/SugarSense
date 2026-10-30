@@ -63,7 +63,7 @@ def test_saved_model_loading():
         meta = json.load(f)
 
     assert "model_name" in meta
-    assert meta["model_name"] == "Decision Tree"
+    assert meta["model_name"] in {"Decision Tree", "Logistic Regression"}
     assert "features" in meta
     assert meta["features"]["order"] == ALL_FEATURES
     assert "target" in meta
@@ -83,7 +83,10 @@ def test_valid_input_prediction():
     # Check probabilities
     probs = pipeline.predict_proba(df_sample)[0]
     assert len(probs) == 2
+    assert all(pd.notna(float(p)) and 0.0 <= float(p) <= 1.0 for p in probs)
     assert pytest.approx(sum(probs), 0.001) == 1.0
+    positive_index = list(pipeline.classes_).index("Positive")
+    assert 0.0 <= float(probs[positive_index]) <= 1.0
 
 
 def test_invalid_or_missing_input_features():
@@ -120,3 +123,10 @@ def test_expected_output_classes():
     classes = sorted(list(pipeline.classes_))
     expected = sorted(TARGET_CLASSES)
     assert classes == expected
+
+
+def test_invalid_categorical_value_rejected():
+    sample = get_synthetic_test_case()
+    sample["Polyuria"] = "sometimes"
+    with pytest.raises(ValueError, match="unsupported value"):
+        validate_input_data(sample)

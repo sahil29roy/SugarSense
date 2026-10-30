@@ -10,6 +10,8 @@ if str(backend_dir) not in sys.path:
 import joblib
 import pandas as pd
 from sklearn.metrics import (
+    roc_auc_score,
+    brier_score_loss,
     accuracy_score,
     classification_report,
     confusion_matrix,
@@ -18,7 +20,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
-from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+from sklearn.model_selection import GridSearchCV, StratifiedGroupKFold, cross_validate
 
 from ml.dataset import ALL_FEATURES, TARGET_CLASSES, get_features_and_target, load_dataset
 from ml.pipeline import build_pipeline
@@ -37,6 +39,7 @@ def evaluate_model_pipeline(
     y_train: pd.Series,
     X_test: pd.DataFrame,
     y_test: pd.Series,
+    groups_train: pd.Series,
     cv_folds: int = 5,
 ) -> Dict[str, Any]:
     """Train a pipeline, run cross-validation on training data, and evaluate on held-out test data."""
@@ -45,10 +48,11 @@ def evaluate_model_pipeline(
         "recall": make_scorer(recall_score, pos_label="Positive"),
         "precision": make_scorer(precision_score, pos_label="Positive"),
         "f1": make_scorer(f1_score, pos_label="Positive"),
+        "roc_auc": "roc_auc",
     }
 
-    cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=RANDOM_SEED)
-    cv_results = cross_validate(pipeline, X_train, y_train, cv=cv, scoring=scoring)
+    cv = StratifiedGroupKFold(n_splits=cv_folds, shuffle=True, random_state=RANDOM_SEED)
+    cv_results = cross_validate(pipeline, X_train, y_train, cv=cv, groups=groups_train, scoring=scoring)
 
     # Fit exclusively on training data
     pipeline.fit(X_train, y_train)
@@ -76,12 +80,15 @@ def evaluate_model_pipeline(
             "mean_recall": round(cv_rec_mean, 4),
             "mean_precision": round(cv_prec_mean, 4),
             "mean_f1": round(cv_f1_mean, 4),
+            "mean_roc_auc": round(float(cv_results["test_roc_auc"].mean()), 4),
         },
         "test_metrics": {
             "accuracy": round(acc, 4),
             "recall_positive": round(rec, 4),
             "precision_positive": round(prec, 4),
             "f1_positive": round(f1, 4),
+            "roc_auc": round(float(roc_auc_score(y_test == "Positive", pipeline.predict_proba(X_test)[:, list(pipeline.classes_).index("Positive")])), 4),
+            "brier_positive": round(float(brier_score_loss(y_test == "Positive", pipeline.predict_proba(X_test)[:, list(pipeline.classes_).index("Positive")])), 4),
             "confusion_matrix": {
                 "true_negative": cm[0][0],
                 "false_positive": cm[0][1],
@@ -152,24 +159,34 @@ def run_training_workflow(csv_path: Path | str | None = None) -> Dict[str, Any]:
     df = load_dataset(csv_path)
     X, y = get_features_and_target(df)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=TEST_SIZE,
-        random_state=RANDOM_SEED,
-        stratify=y,
+    # Keep duplicate feature profiles together to avoid leakage across splits.
+    groups = pd.Series(pd.util.hash_pandas_object(X, index=False).astype(str), index=X.index)
+    splitter = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=RANDOM_SEED)
+    train_idx, test_idx = min(
+        splitter.split(X, y, groups), key=lambda pair: abs(len(pair[1]) / len(X) - TEST_SIZE)
     )
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    groups_train = groups.iloc[train_idx]
 
+    cv = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=RANDOM_SEED)
     models_to_evaluate = [
-        ("Logistic Regression", build_pipeline("logistic_regression", random_state=RANDOM_SEED)),
-        ("Decision Tree", build_pipeline("decision_tree", random_state=RANDOM_SEED)),
+        ("Logistic Regression", build_pipeline("logistic_regression", random_state=RANDOM_SEED),
+         {"classifier__C": [0.01, 0.1, 1.0, 10.0], "classifier__class_weight": [None, "balanced"]}),
+        ("Decision Tree", build_pipeline("decision_tree", random_state=RANDOM_SEED),
+         {"classifier__max_depth": [2, 3, 4, 5, 6, 8], "classifier__min_samples_split": [2, 5, 10, 20],
+          "classifier__min_samples_leaf": [1, 2, 4, 8, 12]}),
     ]
 
     evaluated_results = []
     trained_pipelines = {}
 
-    for name, pipe in models_to_evaluate:
-        metrics = evaluate_model_pipeline(name, pipe, X_train, y_train, X_test, y_test)
+    for name, base_pipe, param_grid in models_to_evaluate:
+        search = GridSearchCV(base_pipe, param_grid, scoring="f1", cv=cv, refit=True, n_jobs=-1)
+        search.fit(X_train, y_train, groups=groups_train)
+        pipe = search.best_estimator_
+        metrics = evaluate_model_pipeline(name, pipe, X_train, y_train, X_test, y_test, groups_train)
+        metrics["best_params"] = search.best_params_
         print_evaluation_summary(metrics)
         evaluated_results.append(metrics)
         trained_pipelines[name] = pipe
@@ -181,9 +198,9 @@ def run_training_workflow(csv_path: Path | str | None = None) -> Dict[str, Any]:
     best_candidate = max(
         evaluated_results,
         key=lambda m: (
-            m["test_metrics"]["recall_positive"],
-            m["test_metrics"]["f1_positive"],
-            m["test_metrics"]["accuracy"],
+            m["cross_validation"]["mean_f1"],
+            m["cross_validation"]["mean_recall"],
+            m["cross_validation"]["mean_accuracy"],
         ),
     )
 
@@ -193,9 +210,8 @@ def run_training_workflow(csv_path: Path | str | None = None) -> Dict[str, Any]:
     print(f"\nMODEL SELECTION RESULT:")
     print(f"  Selected Model: {selected_model_name}")
     print(
-        f"  Rationale: Prioritized positive-class recall ({best_candidate['test_metrics']['recall_positive']:.4f}) "
-        f"and minimal false negatives ({best_candidate['test_metrics']['confusion_matrix']['false_negative']}) "
-        f"to maximize risk detection efficacy in an educational screening setting."
+        f"  Rationale: highest training cross-validation F1 ({best_candidate['cross_validation']['mean_f1']:.4f}), "
+        "with recall and accuracy as tie breakers. Held-out metrics were not used for selection."
     )
 
     metadata: Dict[str, Any] = {
@@ -208,6 +224,9 @@ def run_training_workflow(csv_path: Path | str | None = None) -> Dict[str, Any]:
             "train_rows": len(X_train),
             "test_rows": len(X_test),
             "train_test_split_ratio": f"{int((1 - TEST_SIZE) * 100)}/{int(TEST_SIZE * 100)}",
+            "duplicate_rows": int(df.duplicated().sum()),
+            "duplicate_feature_profiles": int(X.duplicated().sum()),
+            "split_strategy": "StratifiedGroupKFold; identical feature profiles kept together",
         },
         "features": {
             "order": ALL_FEATURES,
@@ -220,9 +239,9 @@ def run_training_workflow(csv_path: Path | str | None = None) -> Dict[str, Any]:
         "selected_model_metrics": best_candidate,
         "all_model_evaluations": evaluated_results,
         "clinical_tradeoff_note": (
-            "In health screening applications, false negatives (failing to identify at-risk users) carry "
-            "greater clinical cost than false positives (which merely trigger confirmatory clinical evaluation). "
-            "The final model was selected primarily for high positive-class sensitivity and overall discrimination."
+            "Educational screening context only. The model was selected by grouped training cross-validation F1, "
+            "with positive recall and accuracy as tie breakers; held-out test results did not inform selection. "
+            "These dataset metrics do not establish clinical reliability."
         ),
     }
 

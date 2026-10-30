@@ -96,10 +96,16 @@ def validate_input_data(data: Dict[str, Any] | List[Dict[str, Any]] | pd.DataFra
     if (df["Age"] < 0).any() or (df["Age"] > 120).any():
         raise ValueError("Feature 'Age' must be within a realistic physiological range (0-120).")
 
+    allowed_values = {"Gender": {"Male", "Female"}}
+    allowed_values.update({name: {"No", "Yes"} for name in EXPECTED_CATEGORICAL_FEATURES if name != "Gender"})
+
     # Validate categorical columns are non-empty
     for col in EXPECTED_CATEGORICAL_FEATURES:
         if df[col].isnull().any():
             raise ValueError(f"Feature '{col}' contains null or missing values.")
+        invalid = set(df[col].unique()) - allowed_values[col]
+        if invalid:
+            raise ValueError(f"Feature '{col}' contains unsupported value(s): {sorted(invalid)}")
 
     # Return DataFrame strictly matching the expected feature order
     return df[ALL_FEATURES]

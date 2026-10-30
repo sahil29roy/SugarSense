@@ -56,6 +56,19 @@ def validate_schema(df: pd.DataFrame) -> None:
     missing_cols = [c for c in ALL_COLUMNS if c not in df.columns]
     if missing_cols:
         raise ValueError(f"Dataset is missing required columns: {missing_cols}")
+    missing_values = df[ALL_COLUMNS].isnull().sum()
+    if int(missing_values.sum()) > 0:
+        raise ValueError(f"Dataset contains missing values: {missing_values[missing_values > 0].to_dict()}")
+    invalid_targets = set(df[TARGET_COLUMN].unique()) - set(EXPECTED_TARGET_VALUES)
+    if invalid_targets:
+        raise ValueError(f"Dataset contains unsupported target value(s): {sorted(invalid_targets)}")
+    if not pd.api.types.is_numeric_dtype(df["Age"]):
+        raise ValueError("Dataset feature 'Age' must be numeric.")
+    for col in EXPECTED_CATEGORICAL_FEATURES:
+        allowed = EXPECTED_GENDERS if col == "Gender" else EXPECTED_SYMPTOM_VALUES
+        invalid_values = set(df[col].unique()) - set(allowed)
+        if invalid_values:
+            raise ValueError(f"Dataset feature '{col}' contains unsupported value(s): {sorted(invalid_values)}")
 
 
 def analyze_dataset(csv_path: Path | str | None = None) -> Dict[str, Any]:
