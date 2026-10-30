@@ -37,6 +37,21 @@ export const ScreeningHistoryPage: React.FC<ScreeningHistoryPageProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery);
   const [filterClass, setFilterClass] = useState<'All' | PredictionClass>('All');
   const [selectedRecord, setSelectedRecord] = useState<ScreeningRecord | null>(null);
+  const [selectedScreeningId, setSelectedScreeningId] = useState<string | null>(null);
+
+  const handleIdSearch = (idToSearch: string) => {
+    const trimmed = idToSearch.trim();
+    if (!trimmed) return;
+    // Check if it's already in the currently loaded list
+    const found = records.find((r) => r.id === trimmed || r.id.toLowerCase().includes(trimmed.toLowerCase()));
+    if (found) {
+      setSelectedRecord(found);
+      setSelectedScreeningId(null);
+    } else {
+      setSelectedRecord(null);
+      setSelectedScreeningId(trimmed);
+    }
+  };
 
   const fetchRecords = async (targetPage: number) => {
     setIsLoading(true);
@@ -202,7 +217,12 @@ export const ScreeningHistoryPage: React.FC<ScreeningHistoryPageProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by ID, age, or gender..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim().length >= 10) {
+                handleIdSearch(searchQuery.trim());
+              }
+            }}
+            placeholder="Search by ID, age, or gender (Press Enter for direct ID)..."
             style={{
               border: 'none',
               backgroundColor: 'transparent',
@@ -478,10 +498,14 @@ export const ScreeningHistoryPage: React.FC<ScreeningHistoryPageProps> = ({
       )}
 
       {/* Record Details Modal */}
-      {selectedRecord && (
+      {(selectedRecord || selectedScreeningId) && (
         <ScreeningModal
           screening={selectedRecord}
-          onClose={() => setSelectedRecord(null)}
+          screeningId={selectedScreeningId}
+          onClose={() => {
+            setSelectedRecord(null);
+            setSelectedScreeningId(null);
+          }}
         />
       )}
     </div>

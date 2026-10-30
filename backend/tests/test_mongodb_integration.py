@@ -285,6 +285,55 @@ def test_failed_prediction_does_not_save_record(client: TestClient):
         app.dependency_overrides.clear()
 
 
+def test_api_list_screenings_database_failure_returns_503(client: TestClient):
+    """Verify GET /api/v1/screenings returns HTTP 503 when database fails."""
+    mock_service = MagicMock(spec=ScreeningService)
+    from fastapi import HTTPException
+    mock_service.get_screenings.side_effect = HTTPException(
+        status_code=503, detail="Database is currently unavailable."
+    )
+    app.dependency_overrides[get_screening_service] = lambda: mock_service
+    try:
+        res = client.get("/api/v1/screenings")
+        assert res.status_code == 503
+        assert "unavailable" in res.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_api_get_stats_database_failure_returns_503(client: TestClient):
+    """Verify GET /api/v1/stats returns HTTP 503 when database fails."""
+    mock_service = MagicMock(spec=ScreeningService)
+    from fastapi import HTTPException
+    mock_service.get_stats.side_effect = HTTPException(
+        status_code=503, detail="Database is currently unavailable."
+    )
+    app.dependency_overrides[get_screening_service] = lambda: mock_service
+    try:
+        res = client.get("/api/v1/stats")
+        assert res.status_code == 503
+        assert "unavailable" in res.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_api_get_screening_by_id_database_failure_returns_503(client: TestClient):
+    """Verify GET /api/v1/screenings/{id} returns HTTP 503 when database fails."""
+    mock_service = MagicMock(spec=ScreeningService)
+    from fastapi import HTTPException
+    mock_service.get_screening_by_id.side_effect = HTTPException(
+        status_code=503, detail="Database is currently unavailable."
+    )
+    app.dependency_overrides[get_screening_service] = lambda: mock_service
+    try:
+        valid_id = "507f1f77bcf86cd799439011"
+        res = client.get(f"/api/v1/screenings/{valid_id}")
+        assert res.status_code == 503
+        assert "unavailable" in res.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_live_mongodb_integration_optional():
     """Optional non-destructive integration test against live local MongoDB if running."""
     if not ping_mongodb():
