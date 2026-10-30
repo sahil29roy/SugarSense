@@ -1,1 +1,1 @@
-"""Test suite for DiaPredict backend."""
+"""Test suite for SugarSense backend."""
