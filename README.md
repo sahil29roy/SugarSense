@@ -248,11 +248,11 @@ npm run build
 
 | Dashboard Overview | Step-by-Step Screening Questionnaire |
 | :---: | :---: |
-| ![SugarSense Dashboard Placeholder](docs/screenshots/dashboard.png) | ![SugarSense Screening Questionnaire Placeholder](docs/screenshots/screening.png) |
+| ![SugarSense Dashboard](docs/screenshots/dashboard.png) | ![SugarSense Screening Questionnaire](docs/screenshots/screening.png) |
 
-| Risk Screening Results | Auditable Screening History |
+| Health & Algorithmic Insights | System Diagnostics & Settings |
 | :---: | :---: |
-| ![SugarSense Result View Placeholder](docs/screenshots/results.png) | ![SugarSense Screening History Placeholder](docs/screenshots/history.png) |
+| ![SugarSense Health Insights](docs/screenshots/insights.png) | ![SugarSense System Settings](docs/screenshots/settings.png) |
 
 ---
 
