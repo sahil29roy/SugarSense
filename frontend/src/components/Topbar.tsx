@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  Activity,
-  Database,
   Menu,
   Plus,
   Search,
@@ -12,7 +10,7 @@ import type { HealthStatus, NavigationTab } from '../types';
 interface TopbarProps {
   onOpenMobileMenu: () => void;
   onNavigate: (tab: NavigationTab) => void;
-  health: HealthStatus | null;
+  health?: HealthStatus | null;
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onSearchSubmit: () => void;
@@ -21,14 +19,10 @@ interface TopbarProps {
 export const Topbar: React.FC<TopbarProps> = ({
   onOpenMobileMenu,
   onNavigate,
-  health,
   searchTerm,
   onSearchChange,
   onSearchSubmit,
 }) => {
-  const isHealthy = health?.status === 'healthy';
-  const isDbConnected = health?.database_connected ?? false;
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       onSearchSubmit();
@@ -112,49 +106,8 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
       </div>
 
-      {/* Right: Status indicators & Actions */}
+      {/* Right: Actions & Context badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-        {/* Backend Status indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} className="status-indicators">
-          <div
-            title={isHealthy ? 'FastAPI model backend is operational' : 'FastAPI backend connection degraded'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.35rem 0.75rem',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              backgroundColor: isHealthy ? 'var(--accent-low-risk-bg)' : 'var(--accent-warning-bg)',
-              color: isHealthy ? 'var(--accent-low-risk)' : 'var(--accent-warning)',
-              border: `1px solid ${isHealthy ? 'rgba(56, 132, 71, 0.2)' : 'rgba(217, 144, 50, 0.2)'}`,
-            }}
-          >
-            <Activity size={14} />
-            <span>{isHealthy ? 'Model Ready' : 'API Degraded'}</span>
-          </div>
-
-          <div
-            title={isDbConnected ? 'MongoDB connected' : 'MongoDB offline (screenings run in transient mode)'}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.35rem 0.75rem',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              backgroundColor: isDbConnected ? 'var(--peach-light)' : 'var(--bg-main)',
-              color: isDbConnected ? 'var(--dark-burgundy)' : 'var(--text-muted)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            <Database size={13} />
-            <span>{isDbConnected ? 'Database Connected' : 'DB Offline'}</span>
-          </div>
-        </div>
-
         {/* Quick CTA */}
         <button
           onClick={() => onNavigate('new-screening')}
@@ -207,9 +160,6 @@ export const Topbar: React.FC<TopbarProps> = ({
         @media (max-width: 1024px) {
           .mobile-hamburger-btn {
             display: flex !important;
-          }
-          .status-indicators {
-            display: none !important;
           }
           .profile-pill {
             display: none !important;
