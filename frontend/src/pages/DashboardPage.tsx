@@ -52,6 +52,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         api.getScreenings(10, 0),
       ]);
 
+      if (statsRes.status === 'rejected' && historyRes.status === 'rejected') {
+        const statsReason =
+          statsRes.reason instanceof Error ? statsRes.reason.message : 'Failed to fetch dashboard data';
+        setError(statsReason);
+        return;
+      }
+
       if (statsRes.status === 'fulfilled') {
         setStats(statsRes.value);
       } else {
